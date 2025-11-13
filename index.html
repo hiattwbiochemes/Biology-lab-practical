@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrying Capacity Data Generator</title>
+</head>
+<body>
+  <h2>Carrying Capacity Data Generator</h2>
+
+  <label>Starting Population: <input type="number" id="startPop" value="50"></label><br>
+  <label>Birth Rate (as decimal): <input type="number" id="birthRate" step="0.01" value="0.3"></label><br>
+  <label>Death Rate (as decimal): <input type="number" id="deathRate" step="0.01" value="0.1"></label><br>
+  <label>Number of Seasons: <input type="number" id="seasons" value="10"></label><br><br>
+
+  <button onclick="generateData()">Generate Data</button>
+
+  <h3>Population Over Time</h3>
+  <table border="1" cellpadding="5" id="dataTable">
+    <tr><th>Season</th><th>Population</th></tr>
+  </table>
+
+  <script>
+    function generateData() {
+      let startPop = parseFloat(document.getElementById('startPop').value);
+      let birthRate = parseFloat(document.getElementById('birthRate').value);
+      let deathRate = parseFloat(document.getElementById('deathRate').value);
+      let seasons = parseInt(document.getElementById('seasons').value);
+
+      // Hidden carrying capacity between 180 and 250
+      const K = Math.floor(Math.random() * 71) + 180;
+
+      let table = document.getElementById('dataTable');
+      table.innerHTML = "<tr><th>Season</th><th>Population</th></tr>";
+
+      let pop = startPop;
+      for (let t = 1; t <= seasons; t++) {
+        let growthRate = birthRate - deathRate;
+
+        // Logistic growth model with slight environmental variation
+        pop = pop + growthRate * pop * (1 - pop / K);
+
+        // After about season 6, limit growth and add fluctuations
+        if (t > 6) {
+          let fluctuation = (Math.random() - 0.5) * 0.1 * K; // ±5% variation
+          pop = K + fluctuation;
+        }
+
+        // Prevent population from going negative
+        if (pop < 0) pop = 0;
+
+        table.innerHTML += `<tr><td>${t}</td><td>${pop.toFixed(2)}</td></tr>`;
+      }
+
+      console.log("Hidden Carrying Capacity (K):", K); // Teacher only
+    }
+  </script>
+</body>
+</html>
