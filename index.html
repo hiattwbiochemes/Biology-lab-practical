@@ -3,59 +3,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carrying Capacity Data Generator</title>
+  <title>Population Growth Data Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f9fafb;
+      color: #333;
+    }
+    h1 {
+      color: #2c5282;
+    }
+    label, button {
+      display: block;
+      margin-top: 10px;
+    }
+    input, button {
+      padding: 8px;
+      font-size: 16px;
+    }
+    pre {
+      background: #edf2f7;
+      padding: 10px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+  </style>
 </head>
 <body>
-  <h2>Carrying Capacity Data Generator</h2>
-
-  <label>Starting Population: <input type="number" id="startPop" value="50"></label><br>
-  <label>Birth Rate (as decimal): <input type="number" id="birthRate" step="0.01" value="0.3"></label><br>
-  <label>Death Rate (as decimal): <input type="number" id="deathRate" step="0.01" value="0.1"></label><br>
-  <label>Number of Seasons: <input type="number" id="seasons" value="10"></label><br><br>
-
+  <h1>Population Growth Data Generator</h1>
+  <label for="startPop">Starting Population:</label>
+  <input type="number" id="startPop" min="1" value="100">
+  <label for="growthRate">Growth Rate (% per season):</label>
+  <input type="number" id="growthRate" min="1" value="10">
+  <label for="seasons">Number of Seasons:</label>
+  <input type="number" id="seasons" min="1" value="10">
   <button onclick="generateData()">Generate Data</button>
 
-  <h3>Population Over Time</h3>
-  <table border="1" cellpadding="5" id="dataTable">
-    <tr><th>Season</th><th>Population</th></tr>
-  </table>
+  <h2>Generated Population Data:</h2>
+  <pre id="output"></pre>
 
   <script>
     function generateData() {
-      let startPop = parseFloat(document.getElementById('startPop').value);
-      let birthRate = parseFloat(document.getElementById('birthRate').value);
-      let deathRate = parseFloat(document.getElementById('deathRate').value);
-      let seasons = parseInt(document.getElementById('seasons').value);
+      const startPop = parseFloat(document.getElementById('startPop').value);
+      const growthRate = parseFloat(document.getElementById('growthRate').value) / 100;
+      const seasons = parseInt(document.getElementById('seasons').value);
 
-      // Hidden carrying capacity between 180 and 250
-      const K = Math.floor(Math.random() * 71) + 180;
+      let population = startPop;
+      let data = `Season\tPopulation\n`;
 
-      let table = document.getElementById('dataTable');
-      table.innerHTML = "<tr><th>Season</th><th>Population</th></tr>";
+      // Randomly select a "limiting" season for plateau
+      const limitSeason = Math.floor(Math.random() * (seasons / 2)) + (seasons / 2);
+      const carryingCapacity = startPop * (1 + growthRate * limitSeason) * (1.2 + Math.random() * 0.5);
 
-      let pop = startPop;
-      for (let t = 1; t <= seasons; t++) {
-        let growthRate = birthRate - deathRate;
-
-        // Logistic growth model with slight environmental variation
-        pop = pop + growthRate * pop * (1 - pop / K);
-
-        // After about season 6, limit growth and add fluctuations
-        if (t > 6) {
-          let fluctuation = (Math.random() - 0.5) * 0.1 * K; // ±5% variation
-          pop = K + fluctuation;
+      for (let i = 1; i <= seasons; i++) {
+        if (population < carryingCapacity) {
+          population *= (1 + growthRate * (Math.random() * 0.8 + 0.6));
+          if (population > carryingCapacity) population = carryingCapacity;
+        } else {
+          population *= (0.98 + Math.random() * 0.04);
         }
 
-        // Prevent population from going negative
-        if (pop < 0) pop = 0;
-
-        // Convert to whole number
-        pop = Math.round(pop);
-
-        table.innerHTML += `<tr><td>${t}</td><td>${pop}</td></tr>`;
+        // ✅ Round to the nearest whole number
+        data += `${i}\t${Math.round(population)}\n`;
       }
 
-      console.log("Hidden Carrying Capacity (K):", K); // Teacher only
+      document.getElementById('output').textContent = data;
     }
   </script>
 </body>
