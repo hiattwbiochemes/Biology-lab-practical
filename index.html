@@ -49,7 +49,10 @@
         // Prevent population from going negative
         if (pop < 0) pop = 0;
 
-        table.innerHTML += `<tr><td>${t}</td><td>${pop.toFixed(2)}</td></tr>`;
+        // Convert to whole number
+        pop = Math.round(pop);
+
+        table.innerHTML += `<tr><td>${t}</td><td>${pop}</td></tr>`;
       }
 
       console.log("Hidden Carrying Capacity (K):", K); // Teacher only
