@@ -1,75 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Population Growth Data Generator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      background-color: #f9fafb;
-      color: #333;
-    }
-    h1 {
-      color: #2c5282;
-    }
-    label, button {
-      display: block;
-      margin-top: 10px;
-    }
-    input, button {
-      padding: 8px;
-      font-size: 16px;
-    }
-    pre {
-      background: #edf2f7;
-      padding: 10px;
-      border-radius: 6px;
-      white-space: pre-wrap;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Population Data Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input {
+            margin-left: 10px;
+        }
+        button {
+            margin-top: 15px;
+        }
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 5px;
+        }
+        table {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-  <h1>Population Growth Data Generator</h1>
-  <label for="startPop">Starting Population:</label>
-  <input type="number" id="startPop" min="1" value="100">
-  <label for="growthRate">Growth Rate (% per season):</label>
-  <input type="number" id="growthRate" min="1" value="10">
-  <label for="seasons">Number of Seasons:</label>
-  <input type="number" id="seasons" min="1" value="10">
-  <button onclick="generateData()">Generate Data</button>
 
-  <h2>Generated Population Data:</h2>
-  <pre id="output"></pre>
+<h2>Population Data Generator</h2>
 
-  <script>
-    function generateData() {
-      const startPop = parseFloat(document.getElementById('startPop').value);
-      const growthRate = parseFloat(document.getElementById('growthRate').value) / 100;
-      const seasons = parseInt(document.getElementById('seasons').value);
+<label>Starting Population: 
+    <input id="startPop" type="number" value="50">
+</label>
 
-      let population = startPop;
-      let data = `Season\tPopulation\n`;
+<label>Birth Rate (0–1): 
+    <input id="birthRate" type="number" value="0.3" step="0.01">
+</label>
 
-      // Randomly select a "limiting" season for plateau
-      const limitSeason = Math.floor(Math.random() * (seasons / 2)) + (seasons / 2);
-      const carryingCapacity = startPop * (1 + growthRate * limitSeason) * (1.2 + Math.random() * 0.5);
+<label>Death Rate (0–1): 
+    <input id="deathRate" type="number" value="0.1" step="0.01">
+</label>
 
-      for (let i = 1; i <= seasons; i++) {
-        if (population < carryingCapacity) {
-          population *= (1 + growthRate * (Math.random() * 0.8 + 0.6));
-          if (population > carryingCapacity) population = carryingCapacity;
-        } else {
-          population *= (0.98 + Math.random() * 0.04);
-        }
+<label>Number of Seasons:
+    <input id="seasons" type="number" value="10">
+</label>
 
-        // ✅ Round to the nearest whole number
-        data += `${i}\t${Math.round(population)}\n`;
-      }
+<button onclick="generateData()">Generate Data</button>
 
-      document.getElementById('output').textContent = data;
+<div id="output"></div>
+
+<script>
+function generateData() {
+    let population = parseFloat(document.getElementById("startPop").value);
+    const birthRate = parseFloat(document.getElementById("birthRate").value);
+    const deathRate = parseFloat(document.getElementById("deathRate").value);
+    const seasons = parseInt(document.getElementById("seasons").value);
+
+    const hiddenK = 300;  // internal carrying capacity (students do NOT see this)
+
+    let results = [];
+
+    for (let season = 1; season <= seasons; season++) {
+
+        // Logistic growth component (slows as population approaches carrying capacity)
+        const logisticGrowth = birthRate * population * (1 - population / hiddenK);
+
+        // Death component
+        const loss = deathRate * population;
+
+        // Noise creates oscillation
+        const noise = (Math.random() - 0.5) * 20;
+
+        let newPopulation = population + logisticGrowth - loss + noise;
+
+        if (newPopulation < 1) newPopulation = 1;
+
+        // Round to whole numbers for clean student data
+        population = Math.round(newPopulation);
+
+        results.push(population);
     }
-  </script>
+
+    // Build output table
+    let tableHTML = "<table><tr><th>Season</th><th>Population</th></tr>";
+    results.forEach((pop, index) => {
+        tableHTML += `<tr><td>${index + 1}</td><td>${pop}</td></tr>`;
+    });
+    tableHTML += "</table>";
+
+    document.getElementById("output").innerHTML = tableHTML;
+}
+</script>
+
 </body>
 </html>
+
