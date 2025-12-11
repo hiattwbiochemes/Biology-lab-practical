@@ -60,32 +60,34 @@ function generateData() {
     const deathRate = parseFloat(document.getElementById("deathRate").value);
     const seasons = parseInt(document.getElementById("seasons").value);
 
-    const hiddenK = 300;  // internal carrying capacity (students do NOT see this)
+    const hiddenK = 300;  // internal carrying capacity
 
     let results = [];
 
     for (let season = 1; season <= seasons; season++) {
 
-        // Logistic growth component (slows as population approaches carrying capacity)
-        const logisticGrowth = birthRate * population * (1 - population / hiddenK);
+        // Stronger density dependence to guarantee leveling off
+        const logisticFactor = 1 - (population / hiddenK);
 
-        // Death component
-        const loss = deathRate * population;
+        // Adjust so growth reverses strongly when above K
+        const densityPenalty = (population / hiddenK) * 0.4 * population;
 
-        // Noise creates oscillation
-        const noise = (Math.random() - 0.5) * 20;
+        // Core population change
+        let newPopulation =
+            population
+            + (birthRate * population * logisticFactor)
+            - (deathRate * population)
+            - densityPenalty
+            + ((Math.random() - 0.5) * 30); // more noise for oscillation
 
-        let newPopulation = population + logisticGrowth - loss + noise;
-
+        // Prevent extinction
         if (newPopulation < 1) newPopulation = 1;
 
-        // Round to whole numbers for clean student data
         population = Math.round(newPopulation);
 
         results.push(population);
     }
 
-    // Build output table
     let tableHTML = "<table><tr><th>Season</th><th>Population</th></tr>";
     results.forEach((pop, index) => {
         tableHTML += `<tr><td>${index + 1}</td><td>${pop}</td></tr>`;
@@ -98,4 +100,3 @@ function generateData() {
 
 </body>
 </html>
-
