@@ -33,15 +33,15 @@
 
 <h2>Population Data Generator</h2>
 
-<label>Starting Population: 
+<label>Starting Population:
     <input id="startPop" type="number" value="50">
 </label>
 
-<label>Birth Rate (0–1): 
+<label>Birth Rate (0–1):
     <input id="birthRate" type="number" value="0.3" step="0.01">
 </label>
 
-<label>Death Rate (0–1): 
+<label>Death Rate (0–1):
     <input id="deathRate" type="number" value="0.1" step="0.01">
 </label>
 
@@ -60,25 +60,28 @@ function generateData() {
     const deathRate = parseFloat(document.getElementById("deathRate").value);
     const seasons = parseInt(document.getElementById("seasons").value);
 
-    const hiddenK = 300;  // internal carrying capacity
+    const hiddenK = 200;  // Target carrying capacity: ~200
 
     let results = [];
 
     for (let season = 1; season <= seasons; season++) {
 
-        // Stronger density dependence to guarantee leveling off
+        // Logistic factor (slows growth near K)
         const logisticFactor = 1 - (population / hiddenK);
 
-        // Adjust so growth reverses strongly when above K
-        const densityPenalty = (population / hiddenK) * 0.4 * population;
+        // Strong density penalty for guaranteed stabilization
+        const densityPenalty = (population / hiddenK) * 0.25 * population;
 
-        // Core population change
+        // Noise to make oscillation realistic
+        const noise = (Math.random() - 0.5) * 20;
+
+        // New population calculation
         let newPopulation =
-            population
-            + (birthRate * population * logisticFactor)
-            - (deathRate * population)
-            - densityPenalty
-            + ((Math.random() - 0.5) * 30); // more noise for oscillation
+            population +
+            (birthRate * population * logisticFactor) -
+            (deathRate * population) -
+            densityPenalty +
+            noise;
 
         // Prevent extinction
         if (newPopulation < 1) newPopulation = 1;
@@ -88,6 +91,7 @@ function generateData() {
         results.push(population);
     }
 
+    // Build table
     let tableHTML = "<table><tr><th>Season</th><th>Population</th></tr>";
     results.forEach((pop, index) => {
         tableHTML += `<tr><td>${index + 1}</td><td>${pop}</td></tr>`;
